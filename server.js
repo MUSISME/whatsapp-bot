@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Constants
-const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz9wi5WyewTuPzGpv1IGQH4EnCk2udA1uJiT1-Pse2pQCovZe6L__e5hMQrW6NuXboKWg/exec';
+const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzgpa00-3FTV3F6OPgWkIUg2hqh39bz8vcllDWKA6lzc-ott3mqkv1du8-lO0ncWa4/exec';
 
 const app = express();
 app.use(cors());
@@ -112,18 +112,32 @@ async function startSession(phoneNumber) {
     sock.ev.on('messages.upsert', async ({ messages, type }) => {
         if (type !== 'notify') return;
 
+        const authState = sessions.get(phoneNumber)?.state?.creds;
+        const ownJid = authState?.me?.id || ''; // Dynamically get your phone number's JID
+
         for (const msg of messages) {
             if (!msg.message) continue;
+
             const from = msg.key.remoteJid;
 
-            // Inside messages.upsert event handler, after getting `from`:
+            // Exclude status and newsletter messages
             if (from === 'status@broadcast' || from.endsWith('@newsletter')) {
                 console.log('Excluded message from status@broadcast or newsletter');
-                continue; // skip processing these messages
+                continue;
+            }
+
+            const messageType = Object.keys(msg.message)[0]; // Get the type of the message
+            if (messageType === 'reactionMessage') {
+                const reaction = msg.message.reactionMessage;
+                console.log(`Reaction received: ${reaction.emoji} for message ID: ${reaction.key?.id}`);
+                continue;
             }
 
             const senderJid = msg.key.participant || msg.key.remoteJid;
-            const senderPhone = senderJid.split('@')[0];
+            const fromMe = msg.key.fromMe;
+            const senderPhone = fromMe
+                ? ownJid.split('@')[0].split(':')[0] // Extract the phone number from ownJid and remove any suffix after `:`
+                : senderJid.split('@')[0];
             const senderName = msg.pushName || 'Unknown';
             const messageId = msg.key.id;
             const message =
@@ -136,7 +150,6 @@ async function startSession(phoneNumber) {
             const date = new Date(timestamp * 1000);
             const datetime = formatDateTime(date);
             const isGroup = from.endsWith('@g.us');
-            const fromMe = msg.key.fromMe;
 
             let groupName = null;
 
@@ -184,6 +197,7 @@ async function startSession(phoneNumber) {
             }
         }
     });
+
 }
 
 // Reload existing sessions
