@@ -15,6 +15,7 @@ app.use(cors({
     origin: FRONTEND_URL,
     credentials: true
 }));
+
 app.use(express.json());
 
 const sessions = new Map(); // phoneNumber => { sock, state, saveCreds, qr, isConnected }
