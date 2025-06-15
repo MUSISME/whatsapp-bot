@@ -189,7 +189,7 @@ const App = () => {
         marginBottom: '32px',
         fontWeight: '600'
       }}>
-        WhatsApp Phone Manager
+        WhatsApp Manager
       </h1>
 
       {/* Add Phone Section */}
