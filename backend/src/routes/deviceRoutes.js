@@ -14,6 +14,9 @@ router.get('/get-qr/:phone', deviceController.getQR);
 // Get all registered devices
 router.get('/get-registered-devices', deviceController.getRegisteredDevices);
 
+// Send a message
+router.post('/send-message', deviceController.sendMessage);
+
 // Health check endpoint
 router.get('/health', (req, res) => {
     res.json({ status: 'ok' });

@@ -15,22 +15,22 @@ class DeviceController {
         try {
             await whatsappService.startSession(phoneNumber);
 
-            const qr = await new Promise((resolve, reject) => {
+            const pairingCode = await new Promise((resolve, reject) => {
                 let attempts = 0;
                 const interval = setInterval(() => {
                     attempts++;
                     const session = whatsappService.getSession(phoneNumber);
-                    if (session?.qr) {
+                    if (session?.pairingCode) {
                         clearInterval(interval);
-                        resolve(session.qr);
-                    } else if (attempts > 20) {
+                        resolve(session.pairingCode);
+                    } else if (attempts > 120) { // increased timeout
                         clearInterval(interval);
-                        reject(new Error('QR code timeout'));
+                        reject(new Error('Pairing code timeout'));
                     }
                 }, 500);
             });
 
-            res.json({ qr });
+            res.json({ pairingCode });
         } catch (err) {
             console.error(err);
             res.status(500).json({ message: 'Failed to start session', error: err.message });
@@ -68,6 +68,26 @@ class DeviceController {
     getRegisteredDevices(req, res) {
         const devices = whatsappService.getAllSessions();
         res.json(devices);
+    }
+
+    async sendMessage(req, res) {
+        const { phoneNumber, to, message } = req.body;
+        if (!phoneNumber || !to || !message) {
+            return res.status(400).json({ message: 'phoneNumber, to, and message are required' });
+        }
+
+        const session = whatsappService.getSession(phoneNumber);
+        if (!session || !session.isConnected) {
+            return res.status(400).json({ message: 'Session not found or not connected' });
+        }
+
+        try {
+            await whatsappService.sendMessage(phoneNumber, to, message);
+            res.json({ message: 'Message sent successfully' });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ message: 'Failed to send message', error: err.message });
+        }
     }
 }
 

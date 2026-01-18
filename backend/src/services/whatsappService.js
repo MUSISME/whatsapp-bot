@@ -1,4 +1,4 @@
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('baileys');
 const qrcode = require('qrcode');
 const path = require('path');
 const fs = require('fs');
@@ -94,28 +94,28 @@ class WhatsAppService {
         const authState = this.sessions.get(phoneNumber)?.state?.creds;
         const ownJid = authState?.me?.id || '';
 
-        for (const msg of messages) {
-            if (!msg.message) continue;
+        // for (const msg of messages) {
+        //     if (!msg.message) continue;
 
-            const from = msg.key.remoteJid;
-            if (from === 'status@broadcast' || from.endsWith('@newsletter')) {
-                console.log('Excluded message from status@broadcast or newsletter');
-                continue;
-            }
+        //     const from = msg.key.remoteJid;
+        //     if (from === 'status@broadcast' || from.endsWith('@newsletter')) {
+        //         console.log('Excluded message from status@broadcast or newsletter');
+        //         continue;
+        //     }
 
-            const messageType = Object.keys(msg.message)[0];
-            if (messageType === 'reactionMessage') {
-                const reaction = msg.message.reactionMessage;
-                console.log(`Reaction received: ${reaction.emoji} for message ID: ${reaction.key?.id}`);
-                continue;
-            }
+        //     const messageType = Object.keys(msg.message)[0];
+        //     if (messageType === 'reactionMessage') {
+        //         const reaction = msg.message.reactionMessage;
+        //         console.log(`Reaction received: ${reaction.emoji} for message ID: ${reaction.key?.id}`);
+        //         continue;
+        //     }
 
-            const messageInfo = this.formatMessageInfo(msg, ownJid, from);
-            if (messageInfo.message) {
-                console.log('Message Info JSON:', JSON.stringify(messageInfo, null, 2));
-                await gasService.sendMessage(messageInfo);
-            }
-        }
+        //     const messageInfo = this.formatMessageInfo(msg, ownJid, from);
+        //     if (messageInfo.message) {
+        //         console.log('Message Info JSON:', JSON.stringify(messageInfo, null, 2));
+        //         // await gasService.sendMessage(messageInfo);
+        //     }
+        // }
     }
 
     formatMessageInfo(msg, ownJid, from) {
@@ -212,6 +212,15 @@ class WhatsAppService {
             phoneNumber,
             isConnected: session.isConnected,
         }));
+    }
+    async sendMessage(phoneNumber, to, message) {
+        const session = this.sessions.get(phoneNumber);
+        if (!session) {
+            throw new Error('Session not found');
+        }
+
+        const jid = to.includes('@') ? to : `${to}@s.whatsapp.net`;
+        await session.sock.sendMessage(jid, { text: message });
     }
 }
 
