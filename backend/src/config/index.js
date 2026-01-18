@@ -3,7 +3,7 @@ const path = require('path');
 module.exports = {
     PORT: process.env.PORT || 5000,
     FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3000',
-    GAS_WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbwpkCoF-0dnqwl-AgKdpsEfhz6j79BZJwlgMRWkLCCtwuhks4JwpIn5_jCHy38UyCk/exec',
+    GAS_WEBAPP_URL: process.env.GAS_WEBAPP_URL,
     AUTH_INFO_PATH: path.join(__dirname, '../../auth_info'),
     QR_TIMEOUT: 10000, // 10 seconds
     QR_CHECK_INTERVAL: 500, // 500ms
